@@ -13,25 +13,31 @@ from utils.scoring import generate_complete_score
 
 st.set_page_config(layout="wide", page_title="Stock Analyzer")
 
-# Custom CSS for black background and styling
+# Custom CSS for black background and styling (FIXED - Charts Visible)
 st.markdown("""
 <style>
-    * {
+    /* Main container styling */
+    .stApp {
         background-color: #0a0a0a;
-        color: #ffffff;
     }
     
     .stMainBlockContainer {
         background-color: #0a0a0a;
         padding: 2rem;
+        color: #ffffff;
     }
     
     .stSidebar {
         background-color: #1a1a1a;
     }
     
-    .stHeader {
-        background-color: #0a0a0a;
+    .stSidebarContent {
+        color: #ffffff;
+    }
+    
+    /* Text and header styling */
+    h1, h2, h3, h4, h5, h6 {
+        color: #00D9FF !important;
     }
     
     .stTitle {
@@ -46,10 +52,15 @@ st.markdown("""
         font-weight: bold;
     }
     
+    p, label, span {
+        color: #ffffff;
+    }
+    
     .stDivider {
         background-color: #333333;
     }
     
+    /* Metric styling */
     [data-testid="stMetricValue"] {
         color: #00D9FF;
         font-size: 1.5rem;
@@ -59,6 +70,7 @@ st.markdown("""
         color: #ffffff;
     }
     
+    /* Button styling */
     .stButton > button {
         background-color: #1a1a1a;
         color: #00D9FF;
@@ -74,16 +86,20 @@ st.markdown("""
         box-shadow: 0 0 20px rgba(0, 217, 255, 0.6);
     }
     
-    .stSelectbox, .stTextInput, .stSlider {
+    /* Input styling */
+    .stTextInput, .stSelectbox, .stSlider {
         color: #ffffff;
     }
     
+    /* Alert boxes */
     .stInfo, .stSuccess, .stWarning, .stError {
         background-color: #1a1a1a;
         border-radius: 10px;
         padding: 1rem;
+        color: #ffffff;
     }
     
+    /* Tab styling */
     .stTabs [data-baseweb="tab-list"] button {
         background-color: #1a1a1a;
         color: #ffffff;
@@ -118,6 +134,15 @@ st.markdown("""
     .news-headline:hover {
         background-color: #252525;
         box-shadow: 0 0 15px rgba(0, 217, 255, 0.3);
+    }
+    
+    /* Plotly chart styling - keep charts visible */
+    [data-testid="stPlotlyContainer"] {
+        background-color: transparent !important;
+    }
+    
+    [data-testid="stPlotlyContainer"] svg {
+        background-color: transparent !important;
     }
     
 </style>
@@ -261,11 +286,15 @@ fig.update_layout(
     height=600,
     hovermode='x unified',
     title_text=f'{ticker} - Price & Technical Analysis',
-    template='plotly_white',
+    template='plotly_dark',
     yaxis_title='Price ($)',
     xaxis_title='Date',
     yaxis=dict(autorange=True),
-    margin=dict(l=50, r=50, t=50, b=50)
+    margin=dict(l=50, r=50, t=50, b=50),
+    plot_bgcolor='#0a0a0a',
+    paper_bgcolor='#0a0a0a',
+    font=dict(color='#ffffff', size=12),
+    title_font=dict(color='#00D9FF', size=16)
 )
 st.plotly_chart(fig, use_container_width='stretch')
 
