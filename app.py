@@ -8,10 +8,120 @@ from utils.fundamentals import get_fundamentals
 from utils.valuation import estimate_fair_price
 from utils.forecast_v2 import train_and_forecast
 from utils.signals import generate_signals, get_latest_signal
-from utils.news import fetch_news_sentiment, aggregate_sentiment_features
+from utils.news import fetch_news_sentiment, aggregate_sentiment_features, get_top_headlines
 from utils.scoring import generate_complete_score
 
 st.set_page_config(layout="wide", page_title="Stock Analyzer")
+
+# Custom CSS for black background and styling
+st.markdown("""
+<style>
+    * {
+        background-color: #0a0a0a;
+        color: #ffffff;
+    }
+    
+    .stMainBlockContainer {
+        background-color: #0a0a0a;
+        padding: 2rem;
+    }
+    
+    .stSidebar {
+        background-color: #1a1a1a;
+    }
+    
+    .stHeader {
+        background-color: #0a0a0a;
+    }
+    
+    .stTitle {
+        color: #00D9FF;
+        font-size: 2.5rem;
+        font-weight: bold;
+        text-shadow: 0 0 10px rgba(0, 217, 255, 0.5);
+    }
+    
+    .stSubheader {
+        color: #00D9FF;
+        font-weight: bold;
+    }
+    
+    .stDivider {
+        background-color: #333333;
+    }
+    
+    [data-testid="stMetricValue"] {
+        color: #00D9FF;
+        font-size: 1.5rem;
+    }
+    
+    [data-testid="stMetricLabel"] {
+        color: #ffffff;
+    }
+    
+    .stButton > button {
+        background-color: #1a1a1a;
+        color: #00D9FF;
+        border: 2px solid #00D9FF;
+        border-radius: 10px;
+        font-weight: bold;
+        transition: all 0.3s;
+    }
+    
+    .stButton > button:hover {
+        background-color: #00D9FF;
+        color: #0a0a0a;
+        box-shadow: 0 0 20px rgba(0, 217, 255, 0.6);
+    }
+    
+    .stSelectbox, .stTextInput, .stSlider {
+        color: #ffffff;
+    }
+    
+    .stInfo, .stSuccess, .stWarning, .stError {
+        background-color: #1a1a1a;
+        border-radius: 10px;
+        padding: 1rem;
+    }
+    
+    .stTabs [data-baseweb="tab-list"] button {
+        background-color: #1a1a1a;
+        color: #ffffff;
+        border-bottom: 2px solid #333333;
+    }
+    
+    .stTabs [data-baseweb="tab-list"] button[aria-selected="true"] {
+        border-bottom: 2px solid #00D9FF;
+        color: #00D9FF;
+    }
+    
+    /* Card styling */
+    .metric-card {
+        background-color: #1a1a1a;
+        border: 2px solid #00D9FF;
+        border-radius: 15px;
+        padding: 1.5rem;
+        margin: 1rem 0;
+        box-shadow: 0 0 15px rgba(0, 217, 255, 0.2);
+    }
+    
+    /* Headlines styling */
+    .news-headline {
+        background-color: #1a1a1a;
+        border-left: 4px solid #00D9FF;
+        padding: 1rem;
+        margin: 1rem 0;
+        border-radius: 8px;
+        transition: all 0.3s;
+    }
+    
+    .news-headline:hover {
+        background-color: #252525;
+        box-shadow: 0 0 15px rgba(0, 217, 255, 0.3);
+    }
+    
+</style>
+""", unsafe_allow_html=True)
 
 st.title("Stock Analyzer & Forecaster")
 
@@ -395,11 +505,58 @@ if backtest_metrics and backtest_metrics.get('rmse'):
     )
 
 st.divider()
+
+# News Headlines Section
+st.subheader("📰 Latest News Headlines")
+
+from utils.news import get_top_headlines
+
+try:
+    headlines = get_top_headlines(ticker, limit=5)
+    
+    if headlines and len(headlines) > 0:
+        for idx, headline in enumerate(headlines, 1):
+            # Sentiment emoji
+            sentiment = headline.get('sentiment', 0)
+            if sentiment > 0.2:
+                emoji = "📈"
+                sentiment_label = "Positive"
+            elif sentiment < -0.2:
+                emoji = "📉"
+                sentiment_label = "Negative"
+            else:
+                emoji = "➡️"
+                sentiment_label = "Neutral"
+            
+            # Format date
+            date_str = str(headline.get('date', 'N/A'))
+            source = headline.get('source', 'Unknown')
+            
+            # Display headline
+            st.markdown(f"""
+            **{idx}. {emoji} {headline['title'][:80]}...**
+            
+            *{source}* | {date_str}
+            
+            {headline.get('description', '')[:150]}...
+            
+            [Read Full Article]({headline.get('url', '#')})
+            """)
+            
+            st.divider()
+    else:
+        st.info(f"No recent news found for {ticker}. Try a more common ticker symbol.")
+        
+except Exception as e:
+    st.info(f"News section unavailable. Using NewsAPI free tier. ({str(e)[:50]})")
+
+st.divider()
 st.markdown("""
 ### Model Notes & Disclaimer
 - **Forecast**: Trained on {nlags} lag features with sentiment analysis
 - **Valuation**: Multi-method approach (P/E, Gordon Growth, DCF, P/B)
 - **Signals**: Based on RSI (30/70) and SMA crossovers
 - **Backtesting**: Walk-forward validation on recent {test_size}% of data
+- **News**: Headlines from NewsAPI (free tier)
 - ⚠️ **Disclaimer**: For educational purposes only. Not investment advice.
 """.format(nlags=nlags, test_size=test_size))
